@@ -1,13 +1,10 @@
-public class Grid extends Tile{ // Inheriting from Tile class
-    Integer level; // 3 different levels
-    Tile [][] Grid_Array; //2D tile array.
-    int column_number = 0; // Labeling each column of Grid, progressively.
+class Grid extends Tile{ // Inheriting from Tile class
+    Integer level; // 3 different levels of difficulty
+    Tile [][] Grid_Array; // 2D array consisting of tiles.
+    int column_number = 0; // Labeling each column of the grid, progressively.
     int grid_size = 0; // The side length of each Grid (10 by 10, 15 by 15, etc).
-    int start_x;
-    int end_x;
-    int start_y;
-    int end_y;
-    boolean endgame = false;
+    int total_mines; // total number of mines that a grid has
+    boolean endgame = false; // endgame is true if you win/lose.
         
         
     Grid(Integer level_num){
@@ -52,11 +49,10 @@ public class Grid extends Tile{ // Inheriting from Tile class
             }
     
         void printGrid(){ // Prints out the array
-            System.out.print("This is a " + grid_size + " by " + grid_size + " board."); // Descriptoin.
             System.out.print("\n\n");
         for (int i = 0; i<grid_size; i++){  // Prints out the numbers at the top. Numbering each column.
             if (i == 0){
-                System.out.print("    "); // Spacing in front of zero (formatting)
+                System.out.print("    "); // Spacing in front of zero (formatting) (One tab = 4 spaces)
             }
     
             if (i<10 && i != grid_size-1){
@@ -74,8 +70,8 @@ public class Grid extends Tile{ // Inheriting from Tile class
             }
         }
         for (int i = 0; i <grid_size; i++){
-            for (int j = 0; j <grid_size; j++){ // Nested for loop to printout each coordinate.
-                if (j == 0){ // Give a double space at the beginning of each row (formatting).
+            for (int j = 0; j <grid_size; j++){ // Nested for loop to print out each coordinate.
+                if (j == 0){ // Give a double space at the beginning of each row (formatting) after the number
                    if (column_number <10){ // If the number is single digit, add an extra space.
                     System.out.print(column_number + "  ");
                    }
@@ -98,166 +94,106 @@ public class Grid extends Tile{ // Inheriting from Tile class
         void showMines(){ // Showing and hiding the mines.
             for (int i = 0; i < grid_size; i++){
                 for (int j = 0; j < grid_size; j++){
-                    Grid_Array[i][j].RevealMines = true;
+                    Grid_Array[i][j].RevealMines = true; // We would put reveal mines as true, and the tostring() function would update itself.
             }
         }
         }
         void hideMines(){
             for (int i = 0; i < grid_size; i++){
                 for (int j = 0; j < grid_size; j++){
-                    Grid_Array[i][j].RevealMines = false;
+                    Grid_Array[i][j].RevealMines = false; // Same logic as above, but this time we set it to false.
             }
         }
         }
     
         Grid(){} // Needed for inheritance to Game class.
-        
-        public void flipTile(int x_coordinate, int y_coordinate){
-            if (Grid_Array[y_coordinate][x_coordinate].IsMine == true){
 
-                endgame = true;
-                System.out.println("Sorry, you lost the game!");
-                showMines();
+        void countMines(){ // Get the total amount of mines in the grid.
+            for (int i = 0; i < grid_size; i++){
+                for (int j = 0; j < grid_size; j++){
+                    if (Grid_Array[i][j].IsMine == true){
+                        total_mines++; // Scan the entire grid for mines and add one if we find a mine.
+                    }
+            }
+        }
+        }
+
+        public void flagTile(int x_coordinate, int y_coordinate){ // 2 arguments that the user have to input.
+               Tile tile = Grid_Array[y_coordinate][x_coordinate]; // We have to switch the coordinates around because
+               // the y_ccordinates indicates row, and the x_coordinate indicate column. In the 2D array, the x and y coordinates behaves
+               // differently than how we think about them. 
+               if (tile.isflipped == false){ // Only flag the tile if it's not already flipped.
+                if (tile.isflagged == true){ // If it is already flagged, unflag it (switching the flagged state to false.)
+                    tile.isflagged = false;
+                    if (tile.IsMine == true){
+                        total_mines ++; // If it is a mine, increase the total mines count.
+                    }
+                    
+                } 
+                else{
+                    if (tile.isflagged == false){ // If it isn't flagged, flag it. 
+                    tile.isflagged = true; 
+                    if (tile.IsMine == true){
+                        total_mines --;
+                    }
+                    // The else section here has to go after the previous if statement, because otherwise, the program would unflag a tile
+                    // immediately after it flags it. The self contradiction would produce no effect. 
+                }
+                }
+               }
                 
             }
-            if (Grid_Array[y_coordinate][x_coordinate].IsMine == false && Grid_Array[y_coordinate][x_coordinate].isflipped == false){ 
-                endgame = false;
-                Grid_Array[y_coordinate][x_coordinate].isflipped = true;
-                if (x_coordinate == 0 && y_coordinate == grid_size-1){ // bottom left corner
-                    start_y = grid_size-2;
-                    end_y = grid_size-1;
-                    start_x = 0;
-                    end_x = 1;
-                 for (int i = grid_size-2; i<=grid_size-1; i++){
-                    for (int j = 0; j<=1; j++){
-                        if (Grid_Array[i][j].IsMine == true){
-                            Grid_Array[y_coordinate][x_coordinate].NumAdjacentMines ++;
+            
+        
+        public void flipTile(int x_coordinate, int y_coordinate){ // User input x and y coordinate.
+            if (x_coordinate >= 0 && x_coordinate <grid_size && y_coordinate
+            >= 0 && y_coordinate < grid_size){ // Check that the coordinates are within the grid bounds
+                Tile tile = Grid_Array[y_coordinate][x_coordinate]; // we need the define the actual tile.
+
+                if (tile.isflipped == false && tile.isflagged == false){ // Only flip tiles that have not being flipped or 
+                    // have not being flagged
+                    tile.isflipped = true; // set isflipped to true.
+
+                    if (tile.IsMine == true){ // if it is a mine, end the game.
+                        showMines(); // show the mines.
+                        printGrid();
+                        endgame = true;
+
+
+                    }
+                    else{ // Count the number of mines surrounding it.
+                        int numMines = 0; // set a local variable to count the number of mines.
+                        for (int i = y_coordinate-1; i <= y_coordinate+1; i++){
+                            for (int j = x_coordinate -1; j<= x_coordinate +1; j++){
+                                if (i >= 0 && i<grid_size && j >= 0 && j<grid_size){
+                                    // Tile coordinates need to be within bounds.
+                                    // This also gets rid of the different cases (corners, edges,etc)
+                                    // We can just chck all the 9 tiles around the tile that is flipped.
+                                    // If a set of coordinates is not within bounds, we would 
+                                    // just ignore it and move to the next pair.
+                                    if (Grid_Array[i][j].IsMine == true){ 
+                                        numMines++; 
+                                    }
+
+                                }
+                            }
+                        }
+                        tile.NumAdjacentMines = numMines;
+                    }
+                    if (tile.NumAdjacentMines == 0 && tile.IsMine == false){ // If it is a blank tile and not a mine, proceed.
+                        for (int i = y_coordinate-1; i<= y_coordinate+1; i++){ 
+                            // This is the same logic as before.
+                            for (int j = x_coordinate-1; j <= x_coordinate+1; j++){
+                                if (i >= 0 && i<grid_size && j>= 0 && j<grid_size){
+                                    if (Grid_Array[i][j].isflipped == false){
+                                        flipTile(j, i); // Only flip if it is not flipped.
+                                    }
+                                }
+                            }
                         }
                     }
-                 }
-    
-            }
-            if (x_coordinate == 0 && y_coordinate == 0){ // upper left corner
-                start_y = 0;
-                end_y = 1;
-                start_x = 0;
-                end_x = 1;
-                for (int i = 0; i<=1; i++){
-                    for (int j = 0; j<=1; j++){
-                        if (Grid_Array[i][j].IsMine == true){
-                            Grid_Array[y_coordinate][x_coordinate].NumAdjacentMines ++;
-                    }
                 }
+                
             }
         }
-        if (x_coordinate == grid_size-1 && y_coordinate == 0){ // upper right corner
-            start_y = 0;
-            end_y = 1;
-            start_x = grid_size-2;
-            end_x = grid_size-1;
-            for (int i = 0; i<=1; i++){
-                for (int j = grid_size-2; j<=grid_size-1; j++){
-                    if (Grid_Array[i][j].IsMine == true){
-                        Grid_Array[y_coordinate][x_coordinate].NumAdjacentMines ++;
-                     }
-                }
-            }
-        }
-        if (x_coordinate == grid_size-1 && grid_size-1 == 0){ // bottom right corner
-            start_y = grid_size-2;
-            end_y = grid_size-1;
-            start_x = grid_size-2;
-            end_x = grid_size-1;
-            for (int i = grid_size-2; i<=grid_size-1; i++){
-                for (int j = grid_size-2; j<=grid_size-1; j++){
-                    if (Grid_Array[i][j].IsMine == true){
-                        Grid_Array[y_coordinate][x_coordinate]. NumAdjacentMines ++;
-                }
-            }
-        }
-    }
-        if (x_coordinate == 0 && y_coordinate >= 1 && y_coordinate <= grid_size -2){ // Excluding corner, the first left column
-            start_y = y_coordinate-1;
-            end_y = y_coordinate+1;
-            start_x = 0;
-            end_x = 1;
-            for (int i = y_coordinate-1; i<=y_coordinate+1; i++){
-                for (int j = 0; j<=1; j++){
-                    if (Grid_Array[i][j].IsMine == true){
-                        Grid_Array[y_coordinate][x_coordinate].NumAdjacentMines ++;
-                }
-            }
-        }
-        }
-    
-        if (x_coordinate >= 1 && x_coordinate <= grid_size -2 && y_coordinate == 0){ // top row
-            start_y = 0;
-            end_y = 1;
-            start_x = x_coordinate-1;
-            end_x = x_coordinate+1;
-            for (int i = 0; i<=1; i++){
-                for (int j = x_coordinate-1; j<=x_coordinate+1; j++){
-                    if (Grid_Array[i][j].IsMine == true){
-                        Grid_Array[y_coordinate][x_coordinate].NumAdjacentMines ++;
-                }
-            }
-        }
-        }
-    
-        if (x_coordinate == grid_size -1 && y_coordinate >= 1 && y_coordinate <= grid_size -2){ // rightmost column
-            start_y = y_coordinate-1;
-            end_y = y_coordinate+1;
-            start_x = grid_size-2;
-            end_x = grid_size-1;
-            for (int i = y_coordinate-1; i<=y_coordinate+1; i++){
-                for (int j = grid_size-2; j<=grid_size-1; j++){
-                    if (Grid_Array[i][j].IsMine == true){
-                        Grid_Array[y_coordinate][x_coordinate].NumAdjacentMines ++;
-                }
-            }
-        }
-        }
-        if (x_coordinate >= 1 && x_coordinate <= grid_size -2 && y_coordinate == grid_size-1){ // bottom row
-            start_y = grid_size-2;
-            end_y = grid_size-1;
-            start_x = x_coordinate-1;
-            end_x = x_coordinate+1;
-            for (int i = grid_size-2; i<=grid_size-1; i++){
-                for (int j = x_coordinate-1; j<=x_coordinate+1; j++){
-                    if (Grid_Array[i][j].IsMine == true){
-                        Grid_Array[y_coordinate][x_coordinate].NumAdjacentMines ++;
-                }
-            }
-        }
-        }
-        if (x_coordinate >= 1 && x_coordinate <= grid_size -2 && y_coordinate >= 1 && y_coordinate <= grid_size -2){ // everything else 
-            // (exluding all tiles surroudning, aka inner square)
-            start_y = y_coordinate-1;
-            end_y = y_coordinate+1;
-            start_x = x_coordinate-1; 
-            end_x = x_coordinate+1;
-            for (int i = y_coordinate-1; i<=y_coordinate+1; i++){
-                for (int j = x_coordinate-1; j<=x_coordinate+1; j++){
-                    if (Grid_Array[i][j].IsMine == true){
-                        Grid_Array[y_coordinate][x_coordinate].NumAdjacentMines ++;
-                }
-            }
-        }
-        }
-    
-        
-        }
-
-        if (Grid_Array[y_coordinate][x_coordinate].isBlank == true){
-            for (int i = start_y; i <= end_y; i++){
-                for (int j = start_x; j<= end_x; j++){
-                    if (Grid_Array[i][j].isflipped == false && Grid_Array[i][j].IsMine == false){
-                         // If it is not already flipped.
-                        flipTile(j, i); // flipping the coordinates around.
-                    } 
-                }
-            }
-        }
-    }
-                    
-        }
+     }

@@ -1,58 +1,53 @@
 class Tile{
-    double chance = Math.random(); // returns a random value between 0 and 1.
-    boolean IsMine; // If it is a mine.
-    String type;
+    double chance = Math.random(); // returns a random value between 0 and 1. This will be used to determine if the tile is a mine.
+    boolean IsMine; // If it is a mine or not.
+    String type; // A temporary variable used in the toString() function.
     boolean RevealMines; // determines if we want to reveal the mines.
-    boolean isflipped;
-    boolean isflagged;
-    int NumAdjacentMines = 0;
-    boolean isBlank;
+    boolean isflipped; // If it is flipped or not.
+    boolean isflagged; // if it is flagged or not.
+    int NumAdjacentMines = 0; // Number of adjacent mines around the tile.
     
-    Tile(){
+    Tile(){ // Constructor.
 
-        if (chance <0.8){ // 20% chance of it being a mine.
+        if (chance <0.8){ // Using the math.random() --> 20% chance of it being a mine.
             IsMine = false;
         }
 
-        else if (chance >0.8){
+        else if (chance >0.2){ 
             IsMine = true;
         }
 
-        if (NumAdjacentMines == 0){
-            isBlank = true;
-        }
-        if (NumAdjacentMines != 0){
-            isBlank = false;
-        }
-
-    } // Tile is just [?], so it has an empty constructor.
+    } // Tile is just [ ], so it has an empty constructor.
 
   public String toString(){
-    if (isflipped == false){
+    if (isflagged == false){ // If the tile isn't flagged:
+        if (isflipped == false){ // If the tile isn't flipped.
         if (RevealMines == true){ // If we want to show mines, 
             if (IsMine == false){
-                type = "[?]"; // [?] means not a mine.
+                type = "[ ]"; // [ ] is the default value of a tile after showing the mines.
             }
         if (IsMine == true){
             type = "[•]"; // [•] means it is a mine.
          }
         }
          if (RevealMines == false){
-            type = "[?]"; // if we don't want to reveal (or hide the mines), then everythihng is [?].
+            type = "[ ]"; // if we don't want to reveal (or hide the mines), then everythihng is [ ], the default value.
         }
     }
-    if (isflipped == true){
-        type = "[" + NumAdjacentMines + "]";
-    }
+    if (isflipped == true){ // If it is flipped
+        if (IsMine == true){
+            type = "[•]"; // Mine
+        }
+        else{
+            type = "[" + NumAdjacentMines + "]"; // Showing the number of adjacent mines if it's not a mine.
+        }
         
-    return type;
+    }
         }
 
-    public void flagTile(){
-
+    if (isflagged == true){
+        type = "[F]"; // If flagged, then there is only one option.
     }
-
-    public void unflagTile(){
-
+    return type; // return the toString() --> gets used every time when we print the grid.
     }
   }
